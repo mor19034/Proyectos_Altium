@@ -1,0 +1,1434 @@
+** Copyright Catena Software/Transim Technology Corporation
+** 2004 All rights reserved
+** SIMetrix/SIMPLIS release 5.1 Model Library
+**
+** These models are believed to be accurate but
+** Catena Software Ltd. nor Transim Technology Corporation
+** offers no guarantee as to their fitness for any purpose nor do they
+** accept any responsibility for damage caused directly or indirectly
+** by their use.
+**
+**
+** 11.5.05 Added TLV431 model
+**
+** This line marks this library as a system library
+** Models in this library will not appear in the
+** "User Models" or "New Models" categories
+.systemlib
+**
+.SIMULATOR SIMPLIS
+
+
+.SUBCKT UC3842 6 4 7 1 3 2 8 5 vars: UVLO_AT_T0=0
++ IC_OSC=0 IC_DSRFF=1 IC_RDEAOUT=1 IC_RVLIMIT=2 IC_RILIMIT=2
+*#LABELS ,UnderVoltage Locked-Out at t=0:BOOL
+*#ICDEFS,SUVL:UVLO_AT_T0,!DOSC:IC_OSC,!DSRFF:IC_DSRFF,!RDEAOUT:IC_RDEAOUT,!RVLIMIT:IC_RVLIMIT,!RILIMIT:IC_RILIMIT
+*
+.NODE_MAP VOUT	6
+.NODE_MAP OSC	4
+.NODE_MAP VP	7
+.NODE_MAP COMP	1
+.NODE_MAP SENSE	3
+.NODE_MAP VFB	2
+.NODE_MAP REFV	8
+.NODE_MAP GND	5
+*
+*?@ Start Simplis Encryption LIB_PWM
+* simplis model for uc1842a/uc1843a
+*
+* The following resistor, together with the leakage currents
+*   of !RZCLAMP, !RZ_REF, and !RD_REF, models the 0.3 mA
+*   typical start-up current during under-voltage lockout
+*   of uc1842a/uc1843a
+R_I_STARTUP1 7 5 140K
+*
+* Clamping Zener Diode
+!RZCLAMP 5 7 MRZCLAMPM IC=2
+.MODEL MRZCLAMPM VPWLR NSEG=3
++	X0=-36.1	Y0=-0.0025
++	X1=-34.0	Y1=-340U
++	X2=1.0		Y2=10U
++	X3=1.1		Y3=1.001
+*
+* Start UVL.  UVL has triggering pts at 10 V and 16 V for uc1842a
+*				and at 7.6 V and 8.4 V for uc1843a
+SUVL 7 103 7 5 MSUVLM IC=OPEN
+.MODEL MSUVLM VCSW RON=0.01 ROFF=10MEG TH=13 HYSTWD=6 LOGIC=POS
+*End UVL
+*
+*Start Ref
+R1_REF 103 104 27K
+!RZ_REF 5 104 MRZREFM IC=2
+.MODEL MRZREFM VPWLR NSEG=3
++	X0= -5.70	Y0= -8.008M
++	X1= -5.60	Y1= -8.0U
++	X2=  0.70	Y2=  1.0U
++	X3=  1.00	Y3=  0.300001
+E_REF 103 105 R1_REF 1.0
+*
+*  The following !RD has a normal on resistance of 0.32 ohms,
+*	giving a load regulation of -6 mV change for a load
+*	current range of 1 mA to 20 mA.  It also establishes
+*	a short current of 100 mA.
+!RD_REF 105 8 M1M IC=1
+.MODEL M1M VPWLR NSEG=3
++	X0= 0.00	Y0= 0.00
++	X1= 0.60	Y1= 1.00U
++	X2= 0.632	Y2= 100M
++	X3= 1.232	Y3= 100.001M
+RREF1 8 106 50K
+RREF2 106 5 50K
+!RD_REV_BIASED 8 7 M2M IC=1
+.MODEL M2M VPWLR NSEG=2 X0=0 Y0=0 X1=0.500 Y1=1U X2=1.0 Y2=0.5
+*
+* The following resistor creates an operating current of
+*   about 10.5 mA.  Together with other loads, the total
+*   operating current is about 11.3 mA.
+RLOAD_REF 8 5 475
+*End Ref
+*
+*Start Vref Good Comp
+VREF_OK 107 5 DC 4.5
+!DREF_OK 108 5 107 8 MCOMP1M IC=1
+.MODEL MCOMP1M COMP HYSTWD=10U VOL=0 VOH=5 RIN=10MEG ROUT=50
+*End Vref Good Comp
+*
+*Start OSC
+VOSC 203 5 DC 1.91
+!DOSC 201 5 4 203 MDOSCM IC=0
+.MODEL MDOSCM COMP HYSTWD=1.7 VOL=0 VOH=5 RIN=100MEG ROUT=50
+GOSC1 4 5 201 5 1.660M
+EOSC 202 5 201 5 1
+*End OSC
+*
+*Start Amplifier
+RIN_OP_INV 2 301 0.5MEG
+RIN_OP_NINV 106 301 0.5MEG
+R3 301 5 1000MEG
+G1 5 302 106 2 0.3162U
+!RILIMIT 302 5 MRILIMITM IC=2
+.MODEL MRILIMITM VPWLR NSEG=3
++	X0=-0.6001	Y0=-100.0060U
++	X1=-0.6000	Y1=-0.0060U
++	X2=0.0750	Y2=0.00075U
++	X3=0.0751	Y3=100.00075U
+G2 5 303 302 5 10M
+!RVLIMIT 303 5 MRVLIMITM IC=2
+.MODEL MRVLIMITM VPWLR NSEG=3
++	X0=  0.7000	Y0= -1.00M
++	X1=  0.7001	Y1=  0.00
++	X2=  6.0400	Y2=  0.00
++	X3=  6.0401	Y3=  1.00M
+RLOAD_EAOUT 303 5 100K
+RO_EAOUT 303 1 100
+E_EAOUT 310 5 1 5 1.0
+!RDEAOUT 310 304 MRDEAOUTM IC=1
+.MODEL MRDEAOUTM VPWLR NSEG=2
++	X0= 0		Y0= 0
++	X1= 1.4		Y1= 1N
++	X2= 1.401	Y2= 1M
+RDIV1 304 305 20K
+RDIV2 305 5 10K
+!RZEAOUT 5 305 MRZEAOUTM IC=2
+.MODEL MRZEAOUTM VPWLR NSEG=3
++	X0= -1.0001	Y0= -10U
++	X1= -1.0000	Y1= -1N
++	X2=  0.70000	Y2=  0.7N
++	X3=  0.70001	Y3=  1.0M
+VOFFSET 305 307 DC 16U
+*End Amplifier
+*
+*Start Current Sense Comp
+!DISense 306 5 3 307 MCOMP1M IC=0
+*End Current Sense Comp
+*
+*LOGIC
+*
+*Start SR FF
+!DSRFF 402 401 5 202 306 MSRFFM IC=1
+.MODEL MSRFFM SRFF TH=2.5 HYSTWD=2N VOL=0 VOH=5
++	RIN=1MEG ROUT=50 LOGIC=POS
+*End SR FF
+*
+*Start 3-input OR
+*
+*  The following VCIS's, resistor R_OR3, V2DOT5 and
+*	the comparator !D_OUT together form the equivalent
+*	of a 3-input OR gate.
+*
+G_OR3_REF_OK	5 511 108 5 1M
+G_OR3_OSC	5 511 202 5 1M
+G_OR3_SRFF	5 511 401 5 1M
+R_OR3		5 511 1K
+V2DOT5		512 5 DC 2.50
+!D_OUT 501 5 511 512 MCOMP1M IC= 1
+* End 3-input OR
+*
+*Start OUTPUT SWITCHES
+QT1 7 6 501 5 MQT1M IC=OPEN
+QT2 6 5 501 5 MQT2M IC=CLOSE
+.MODEL MQT1M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=NEG LEVEL=1
+.MODEL MQT2M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=POS LEVEL=1
+*End OUTPUT SWITCHES
+*THE END
+*?@ End Simplis Encryption
+*
+*?@ Start Simplis Encryption LIB_PWM
+*
+* uc1844/uc1845 has a startup current of typical 0.5 mA.
+*   To model the extra 0.2 mA compared to that
+*   of uc1844a/uc1845a, the following resistor is added.
+R_I_STARTUP2  7  5  80K
+*?@ End Simplis Encryption
+*
+.if {UVLO_AT_T0==1} then
+  .var IC_SUVL='OPEN'
+.else
+  .var IC_SUVL='CLOSE'
+.endif
+*
+.INIT SUVL={IC_SUVL}
+.INIT !DOSC={IC_OSC}
+.INIT !DSRFF={IC_DSRFF}
+.INIT !RDEAOUT={IC_RDEAOUT}
+.INIT !RVLIMIT={IC_RVLIMIT}
+.INIT !RILIMIT={IC_RILIMIT}
+*
+.ENDS UC3842
+
+
+.SUBCKT UC3843 6 4 7 1 3 2 8 5 vars: UVLO_AT_T0=0
++ IC_OSC=0 IC_DSRFF=1 IC_RDEAOUT=1 IC_RVLIMIT=2 IC_RILIMIT=2
+*#LABELS ,UnderVoltage Locked-Out at t=0:BOOL
+*#ICDEFS,SUVL:UVLO_AT_T0,!DOSC:IC_OSC,!DSRFF:IC_DSRFF,!RDEAOUT:IC_RDEAOUT,!RVLIMIT:IC_RVLIMIT,!RILIMIT:IC_RILIMIT
+*
+.NODE_MAP VOUT	6
+.NODE_MAP OSC	4
+.NODE_MAP VP	7
+.NODE_MAP COMP	1
+.NODE_MAP SENSE	3
+.NODE_MAP VFB	2
+.NODE_MAP REFV	8
+.NODE_MAP GND	5
+*
+*?@ Start Simplis Encryption LIB_PWM
+* simplis model for uc1842a/uc1843a
+*
+* The following resistor, together with the leakage currents
+*   of !RZCLAMP, !RZ_REF, and !RD_REF, models the 0.3 mA
+*   typical start-up current during under-voltage lockout
+*   of uc1842a/uc1843a
+R_I_STARTUP1 7 5 140K
+*
+* Clamping Zener Diode
+!RZCLAMP 5 7 MRZCLAMPM IC=2
+.MODEL MRZCLAMPM VPWLR NSEG=3
++	X0=-36.1	Y0=-0.0025
++	X1=-34.0	Y1=-340U
++	X2=1.0		Y2=10U
++	X3=1.1		Y3=1.001
+*
+* Start UVL.  UVL has triggering pts at 10 V and 16 V for uc1842a
+*				and at 7.6 V and 8.4 V for uc1843a
+SUVL 7 103 7 5 MSUVLM IC=OPEN
+.MODEL MSUVLM VCSW RON=0.01 ROFF=10MEG TH=8 HYSTWD=0.8 LOGIC=POS
+*End UVL
+*
+*Start Ref
+R1_REF 103 104 27K
+!RZ_REF 5 104 MRZREFM IC=2
+.MODEL MRZREFM VPWLR NSEG=3
++	X0= -5.70	Y0= -8.008M
++	X1= -5.60	Y1= -8.0U
++	X2=  0.70	Y2=  1.0U
++	X3=  1.00	Y3=  0.300001
+E_REF 103 105 R1_REF 1.0
+*
+*  The following !RD has a normal on resistance of 0.32 ohms,
+*	giving a load regulation of -6 mV change for a load
+*	current range of 1 mA to 20 mA.  It also establishes
+*	a short current of 100 mA.
+!RD_REF 105 8 M1M IC=1
+.MODEL M1M VPWLR NSEG=3
++	X0= 0.00	Y0= 0.00
++	X1= 0.60	Y1= 1.00U
++	X2= 0.632	Y2= 100M
++	X3= 1.232	Y3= 100.001M
+RREF1 8 106 50K
+RREF2 106 5 50K
+!RD_REV_BIASED 8 7 M2M IC=1
+.MODEL M2M VPWLR NSEG=2 X0=0 Y0=0 X1=0.500 Y1=1U X2=1.0 Y2=0.5
+*
+* The following resistor creates an operating current of
+*   about 10.5 mA.  Together with other loads, the total
+*   operating current is about 11.3 mA.
+RLOAD_REF 8 5 475
+*End Ref
+*
+*Start Vref Good Comp
+VREF_OK 107 5 DC 4.5
+!DREF_OK 108 5 107 8 MCOMP1M IC=1
+.MODEL MCOMP1M COMP HYSTWD=10U VOL=0 VOH=5 RIN=10MEG ROUT=50
+*End Vref Good Comp
+*
+*Start OSC
+VOSC 203 5 DC 1.91
+!DOSC 201 5 4 203 MDOSCM IC=0
+.MODEL MDOSCM COMP HYSTWD=1.7 VOL=0 VOH=5 RIN=100MEG ROUT=50
+GOSC1 4 5 201 5 1.660M
+EOSC 202 5 201 5 1
+*End OSC
+*
+*Start Amplifier
+RIN_OP_INV 2 301 0.5MEG
+RIN_OP_NINV 106 301 0.5MEG
+R3 301 5 1000MEG
+G1 5 302 106 2 0.3162U
+!RILIMIT 302 5 MRILIMITM IC=2
+.MODEL MRILIMITM VPWLR NSEG=3
++	X0=-0.6001	Y0=-100.0060U
++	X1=-0.6000	Y1=-0.0060U
++	X2=0.0750	Y2=0.00075U
++	X3=0.0751	Y3=100.00075U
+G2 5 303 302 5 10M
+!RVLIMIT 303 5 MRVLIMITM IC=2
+.MODEL MRVLIMITM VPWLR NSEG=3
++	X0=  0.7000	Y0= -1.00M
++	X1=  0.7001	Y1=  0.00
++	X2=  6.0400	Y2=  0.00
++	X3=  6.0401	Y3=  1.00M
+RLOAD_EAOUT 303 5 100K
+RO_EAOUT 303 1 100
+E_EAOUT 310 5 1 5 1.0
+!RDEAOUT 310 304 MRDEAOUTM IC=1
+.MODEL MRDEAOUTM VPWLR NSEG=2
++	X0= 0		Y0= 0
++	X1= 1.4		Y1= 1N
++	X2= 1.401	Y2= 1M
+RDIV1 304 305 20K
+RDIV2 305 5 10K
+!RZEAOUT 5 305 MRZEAOUTM IC=2
+.MODEL MRZEAOUTM VPWLR NSEG=3
++	X0= -1.0001	Y0= -10U
++	X1= -1.0000	Y1= -1N
++	X2=  0.70000	Y2=  0.7N
++	X3=  0.70001	Y3=  1.0M
+VOFFSET 305 307 DC 16U
+*End Amplifier
+*
+*Start Current Sense Comp
+!DISense 306 5 3 307 MCOMP1M IC=0
+*End Current Sense Comp
+*
+*LOGIC
+*
+*Start SR FF
+!DSRFF 402 401 5 202 306 MSRFFM IC=1
+.MODEL MSRFFM SRFF TH=2.5 HYSTWD=2N VOL=0 VOH=5
++	RIN=1MEG ROUT=50 LOGIC=POS
+*End SR FF
+*
+*Start 3-input OR
+*
+*  The following VCIS's, resistor R_OR3, V2DOT5 and
+*	the comparator !D_OUT together form the equivalent
+*	of a 3-input OR gate.
+*
+G_OR3_REF_OK	5 511 108 5 1M
+G_OR3_OSC	5 511 202 5 1M
+G_OR3_SRFF	5 511 401 5 1M
+R_OR3		5 511 1K
+V2DOT5		512 5 DC 2.50
+!D_OUT 501 5 511 512 MCOMP1M IC= 1
+* End 3-input OR
+*
+*Start OUTPUT SWITCHES
+QT1 7 6 501 5 MQT1M IC=OPEN
+QT2 6 5 501 5 MQT2M IC=CLOSE
+.MODEL MQT1M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=NEG LEVEL=1
+.MODEL MQT2M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=POS LEVEL=1
+*End OUTPUT SWITCHES
+*THE END
+*?@ End Simplis Encryption
+*
+*?@ Start Simplis Encryption LIB_PWM
+*
+* uc1844/uc1845 has a startup current of typical 0.5 mA.
+*   To model the extra 0.2 mA compared to that
+*   of uc1844a/uc1845a, the following resistor is added.
+R_I_STARTUP2  7  5  80K
+*?@ End Simplis Encryption
+*
+.if {UVLO_AT_T0==1} then
+  .var IC_SUVL='OPEN'
+.else
+  .var IC_SUVL='CLOSE'
+.endif
+*
+.INIT SUVL={IC_SUVL}
+.INIT !DOSC={IC_OSC}
+.INIT !DSRFF={IC_DSRFF}
+.INIT !RDEAOUT={IC_RDEAOUT}
+.INIT !RVLIMIT={IC_RVLIMIT}
+.INIT !RILIMIT={IC_RILIMIT}
+*
+.ENDS UC3843
+
+
+.SUBCKT UC3844 6 4 7 1 3 2 8 5 vars: UVLO_AT_T0=0
++ IC_OSC=0 IC_DSRFF=1 IC_RDEAOUT=1 IC_RVLIMIT=2 IC_RILIMIT=2 IC_DTFF=1
+*#LABELS ,UnderVoltage Locked-Out at t=0:BOOL
+*#ICDEFS,SUVL:UVLO_AT_T0,!DOSC:IC_OSC,!DSRFF:IC_DSRFF,!RDEAOUT:IC_RDEAOUT,!RVLIMIT:IC_RVLIMIT,!RILIMIT:IC_RILIMIT,!DTFF:IC_DTFF
+*
+.NODE_MAP VOUT	6
+.NODE_MAP OSC	4
+.NODE_MAP VP	7
+.NODE_MAP COMP	1
+.NODE_MAP SENSE	3
+.NODE_MAP VFB	2
+.NODE_MAP REFV	8
+.NODE_MAP GND	5
+*
+*?@ Start Simplis Encryption LIB_PWM
+* simplis model for uc1844a/uc1845a
+*
+* The following resistor, together with the leakage currents
+*   of !RZCLAMP, !RZ_REF, and !RD_REF, models the 0.3 mA
+*   typical start-up current during under-voltage lockout
+*   of uc1844a/uc1845a
+R_I_STARTUP1 7 5 140K
+*
+* Clamping Zener Diode
+!RZCLAMP 5 7 MRZCLAMPM IC=2
+.MODEL MRZCLAMPM VPWLR NSEG=3
++	X0=-36.1	Y0=-0.0025
++	X1=-34.0	Y1=-340U
++	X2=1.0		Y2=10U
++	X3=1.1		Y3=1.001
+*
+* Start UVL.  UVL has triggering pts at 10 V and 16 V for uc1844a
+*				and at 7.6 V and 8.4 V for uc1845a
+SUVL 7 103 7 5 MSUVLM IC=OPEN
+.MODEL MSUVLM VCSW RON=0.01 ROFF=10MEG TH=13 HYSTWD=6 LOGIC=POS
+*End UVL
+*
+*Start Ref
+R1_REF 103 104 27K
+!RZ_REF 5 104 MRZREFM IC=2
+.MODEL MRZREFM VPWLR NSEG=3
++	X0= -5.70	Y0= -8.008M
++	X1= -5.60	Y1= -8.0U
++	X2=  0.70	Y2=  1.0U
++	X3=  1.00	Y3=  0.300001
+E_REF 103 105 R1_REF 1.0
+*
+*  The following !RD has a normal on resistance of 0.32 ohms,
+*	giving a load regulation of -6 mV change for a load
+*	current range of 1 mA to 20 mA.  It also establishes
+*	a short current of 100 mA.
+!RD_REF 105 8 M1M IC=1
+.MODEL M1M VPWLR NSEG=3
++	X0= 0.00	Y0= 0.00
++	X1= 0.60	Y1= 1.00U
++	X2= 0.632	Y2= 100M
++	X3= 1.232	Y3= 100.001M
+RREF1 8 106 50K
+RREF2 106 5 50K
+!RD_REV_BIASED 8 7 M2M IC=1
+.MODEL M2M VPWLR NSEG=2 X0=0 Y0=0 X1=0.500 Y1=1U X2=1.0 Y2=0.5
+*
+* The following resistor creates an operating current of
+*   about 10.5 mA.  Together with other loads, the total
+*   operating current is about 11.3 mA.
+RLOAD_REF 8 5 475
+*End Ref
+*
+*Start Vref Good Comp
+VREF_OK 107 5 DC 4.5
+!DREF_OK 108 5 107 8 MCOMP1M IC=1
+.MODEL MCOMP1M COMP HYSTWD=10U VOL=0 VOH=5 RIN=10MEG ROUT=50
+*End Vref Good Comp
+*
+*Start OSC
+VOSC 203 5 DC 1.91
+!DOSC 201 5 4 203 MDOSCM IC=0
+.MODEL MDOSCM COMP HYSTWD=1.7 VOL=0 VOH=5 RIN=100MEG ROUT=50
+GOSC1 4 5 201 5 1.660M
+EOSC 202 5 201 5 1
+*End OSC
+*
+*Start Amplifier
+RIN_OP_INV 2 301 0.5MEG
+RIN_OP_NINV 106 301 0.5MEG
+R3 301 5 1000MEG
+G1 5 302 106 2 0.3162U
+!RILIMIT 302 5 MRILIMITM IC=2
+.MODEL MRILIMITM VPWLR NSEG=3
++	X0=-0.6001	Y0=-100.0060U
++	X1=-0.6000	Y1=-0.0060U
++	X2=0.0750	Y2=0.00075U
++	X3=0.0751	Y3=100.00075U
+G2 5 303 302 5 10M
+!RVLIMIT 303 5 MRVLIMITM IC=2
+.MODEL MRVLIMITM VPWLR NSEG=3
++	X0=  0.7000	Y0= -1.00M
++	X1=  0.7001	Y1=  0.00
++	X2=  6.0400	Y2=  0.00
++	X3=  6.0401	Y3=  1.00M
+RLOAD_EAOUT 303 5 100K
+RO_EAOUT 303 1 100
+E_EAOUT 310 5 1 5 1.0
+!RDEAOUT 310 304 MRDEAOUTM IC=1
+.MODEL MRDEAOUTM VPWLR NSEG=2
++	X0= 0		Y0= 0
++	X1= 1.4		Y1= 1N
++	X2= 1.401	Y2= 1M
+RDIV1 304 305 20K
+RDIV2 305 5 10K
+!RZEAOUT 5 305 MRZEAOUTM IC=2
+.MODEL MRZEAOUTM VPWLR NSEG=3
++	X0= -1.0001	Y0= -10U
++	X1= -1.0000	Y1= -1N
++	X2=  0.70000	Y2=  0.7N
++	X3=  0.70001	Y3=  1.0M
+VOFFSET 305 307 DC 16U
+*End Amplifier
+*
+*Start Current Sense Comp
+!DISense 306 5 3 307 MCOMP1M IC=0
+*End Current Sense Comp
+*
+*LOGIC
+*
+*Start SR FF
+!DSRFF 402 401 5 202 306 MSRFFM IC=1
+.MODEL MSRFFM SRFF TH=2.5 HYSTWD=2N VOL=0 VOH=5
++	RIN=1MEG ROUT=50 LOGIC=POS
+*End SR FF
+*
+* Start Toggle FF
+!DTFF 403 404 5 8 202 MTFFM IC= 1
+.MODEL MTFFM CLK_TFF TH=2.5 HYSTWD=2N VOL=0 VOH=5
++	RIN=1MEG ROUT=50 LOGIC=POS  TRIG_COND= 0_TO_1
+* End Toggle FF
+*
+*Start 4-input OR
+*
+*  The following VCIS's, resistor R_OR4, V2DOT5 and
+*	the comparator !D_OUT together form the equivalent
+*	of a 4-input OR gate.
+*
+G_OR4_REF_OK	5 511 108 5 1M
+G_OR4_OSC	5 511 202 5 1M
+G_OR4_SRFF	5 511 401 5 1M
+G_OR4_TFF	5 511 403 5 1M
+R_OR4		5 511 1K
+V2DOT5		512 5 DC 2.50
+!D_OUT 501 5 511 512 MCOMP1M IC= 1
+* End 4-input OR
+*
+*Start OUTPUT SWITCHES
+QT1 7 6 501 5 MQT1M IC=OPEN
+QT2 6 5 501 5 MQT2M IC=CLOSE
+.MODEL MQT1M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=NEG LEVEL=1
+.MODEL MQT2M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=POS LEVEL=1
+*End OUTPUT SWITCHES
+*THE END
+*?@ End Simplis Encryption
+*
+*?@ Start Simplis Encryption LIB_PWM
+*
+* uc1844/uc1845 has a startup current of typical 0.5 mA.
+*   To model the extra 0.2 mA compared to that
+*   of uc1844a/uc1845a, the following resistor is added.
+R_I_STARTUP2  7  5  80K
+*?@ End Simplis Encryption
+*
+.if {UVLO_AT_T0==1} then
+  .var IC_SUVL='OPEN'
+.else
+  .var IC_SUVL='CLOSE'
+.endif
+*
+.INIT SUVL={IC_SUVL}
+.INIT !DOSC={IC_OSC}
+.INIT !DSRFF={IC_DSRFF}
+.INIT !RDEAOUT={IC_RDEAOUT}
+.INIT !RVLIMIT={IC_RVLIMIT}
+.INIT !RILIMIT={IC_RILIMIT}
+.INIT !DTFF={IC_DTFF}
+*
+.ENDS UC3844
+
+
+.SUBCKT UC3845 6 4 7 1 3 2 8 5 vars: UVLO_AT_T0=0
++ IC_OSC=0 IC_DSRFF=1 IC_RDEAOUT=1 IC_RVLIMIT=2 IC_RILIMIT=2 IC_DTFF=1
+*#LABELS ,UnderVoltage Locked-Out at t=0:BOOL
+*#ICDEFS,SUVL:UVLO_AT_T0,!DOSC:IC_OSC,!DSRFF:IC_DSRFF,!RDEAOUT:IC_RDEAOUT,!RVLIMIT:IC_RVLIMIT,!RILIMIT:IC_RILIMIT,!DTFF:IC_DTFF
+*
+.NODE_MAP VOUT	6
+.NODE_MAP OSC	4
+.NODE_MAP VP	7
+.NODE_MAP COMP	1
+.NODE_MAP SENSE	3
+.NODE_MAP VFB	2
+.NODE_MAP REFV	8
+.NODE_MAP GND	5
+*
+*?@ Start Simplis Encryption LIB_PWM
+* simplis model for uc1844a/uc1845a
+*
+* The following resistor, together with the leakage currents
+*   of !RZCLAMP, !RZ_REF, and !RD_REF, models the 0.3 mA
+*   typical start-up current during under-voltage lockout
+*   of uc1844a/uc1845a
+R_I_STARTUP1 7 5 140K
+*
+* Clamping Zener Diode
+!RZCLAMP 5 7 MRZCLAMPM IC=2
+.MODEL MRZCLAMPM VPWLR NSEG=3
++	X0=-36.1	Y0=-0.0025
++	X1=-34.0	Y1=-340U
++	X2=1.0		Y2=10U
++	X3=1.1		Y3=1.001
+*
+* Start UVL.  UVL has triggering pts at 10 V and 16 V for uc1844a
+*				and at 7.6 V and 8.4 V for uc1845a
+SUVL 7 103 7 5 MSUVLM IC=OPEN
+.MODEL MSUVLM VCSW RON=0.01 ROFF=10MEG TH=8 HYSTWD=0.8 LOGIC=POS
+*End UVL
+*
+*Start Ref
+R1_REF 103 104 27K
+!RZ_REF 5 104 MRZREFM IC=2
+.MODEL MRZREFM VPWLR NSEG=3
++	X0= -5.70	Y0= -8.008M
++	X1= -5.60	Y1= -8.0U
++	X2=  0.70	Y2=  1.0U
++	X3=  1.00	Y3=  0.300001
+E_REF 103 105 R1_REF 1.0
+*
+*  The following !RD has a normal on resistance of 0.32 ohms,
+*	giving a load regulation of -6 mV change for a load
+*	current range of 1 mA to 20 mA.  It also establishes
+*	a short current of 100 mA.
+!RD_REF 105 8 M1M IC=1
+.MODEL M1M VPWLR NSEG=3
++	X0= 0.00	Y0= 0.00
++	X1= 0.60	Y1= 1.00U
++	X2= 0.632	Y2= 100M
++	X3= 1.232	Y3= 100.001M
+RREF1 8 106 50K
+RREF2 106 5 50K
+!RD_REV_BIASED 8 7 M2M IC=1
+.MODEL M2M VPWLR NSEG=2 X0=0 Y0=0 X1=0.500 Y1=1U X2=1.0 Y2=0.5
+*
+* The following resistor creates an operating current of
+*   about 10.5 mA.  Together with other loads, the total
+*   operating current is about 11.3 mA.
+RLOAD_REF 8 5 475
+*End Ref
+*
+*Start Vref Good Comp
+VREF_OK 107 5 DC 4.5
+!DREF_OK 108 5 107 8 MCOMP1M IC=1
+.MODEL MCOMP1M COMP HYSTWD=10U VOL=0 VOH=5 RIN=10MEG ROUT=50
+*End Vref Good Comp
+*
+*Start OSC
+VOSC 203 5 DC 1.91
+!DOSC 201 5 4 203 MDOSCM IC=0
+.MODEL MDOSCM COMP HYSTWD=1.7 VOL=0 VOH=5 RIN=100MEG ROUT=50
+GOSC1 4 5 201 5 1.660M
+EOSC 202 5 201 5 1
+*End OSC
+*
+*Start Amplifier
+RIN_OP_INV 2 301 0.5MEG
+RIN_OP_NINV 106 301 0.5MEG
+R3 301 5 1000MEG
+G1 5 302 106 2 0.3162U
+!RILIMIT 302 5 MRILIMITM IC=2
+.MODEL MRILIMITM VPWLR NSEG=3
++	X0=-0.6001	Y0=-100.0060U
++	X1=-0.6000	Y1=-0.0060U
++	X2=0.0750	Y2=0.00075U
++	X3=0.0751	Y3=100.00075U
+G2 5 303 302 5 10M
+!RVLIMIT 303 5 MRVLIMITM IC=2
+.MODEL MRVLIMITM VPWLR NSEG=3
++	X0=  0.7000	Y0= -1.00M
++	X1=  0.7001	Y1=  0.00
++	X2=  6.0400	Y2=  0.00
++	X3=  6.0401	Y3=  1.00M
+RLOAD_EAOUT 303 5 100K
+RO_EAOUT 303 1 100
+E_EAOUT 310 5 1 5 1.0
+!RDEAOUT 310 304 MRDEAOUTM IC=1
+.MODEL MRDEAOUTM VPWLR NSEG=2
++	X0= 0		Y0= 0
++	X1= 1.4		Y1= 1N
++	X2= 1.401	Y2= 1M
+RDIV1 304 305 20K
+RDIV2 305 5 10K
+!RZEAOUT 5 305 MRZEAOUTM IC=2
+.MODEL MRZEAOUTM VPWLR NSEG=3
++	X0= -1.0001	Y0= -10U
++	X1= -1.0000	Y1= -1N
++	X2=  0.70000	Y2=  0.7N
++	X3=  0.70001	Y3=  1.0M
+VOFFSET 305 307 DC 16U
+*End Amplifier
+*
+*Start Current Sense Comp
+!DISense 306 5 3 307 MCOMP1M IC=0
+*End Current Sense Comp
+*
+*LOGIC
+*
+*Start SR FF
+!DSRFF 402 401 5 202 306 MSRFFM IC=1
+.MODEL MSRFFM SRFF TH=2.5 HYSTWD=2N VOL=0 VOH=5
++	RIN=1MEG ROUT=50 LOGIC=POS
+*End SR FF
+*
+* Start Toggle FF
+!DTFF 403 404 5 8 202 MTFFM IC= 1
+.MODEL MTFFM CLK_TFF TH=2.5 HYSTWD=2N VOL=0 VOH=5
++	RIN=1MEG ROUT=50 LOGIC=POS  TRIG_COND= 0_TO_1
+* End Toggle FF
+*
+*Start 4-input OR
+*
+*  The following VCIS's, resistor R_OR4, V2DOT5 and
+*	the comparator !D_OUT together form the equivalent
+*	of a 4-input OR gate.
+*
+G_OR4_REF_OK	5 511 108 5 1M
+G_OR4_OSC	5 511 202 5 1M
+G_OR4_SRFF	5 511 401 5 1M
+G_OR4_TFF	5 511 403 5 1M
+R_OR4		5 511 1K
+V2DOT5		512 5 DC 2.50
+!D_OUT 501 5 511 512 MCOMP1M IC= 1
+* End 4-input OR
+*
+*Start OUTPUT SWITCHES
+QT1 7 6 501 5 MQT1M IC=OPEN
+QT2 6 5 501 5 MQT2M IC=CLOSE
+.MODEL MQT1M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=NEG LEVEL=1
+.MODEL MQT2M VCQPOS VSAT=.1 RSAT=1 ROFF=10MEG
++	GAIN=100 TH=2.5 HYSTWD=2U LOGIC=POS LEVEL=1
+*End OUTPUT SWITCHES
+*THE END
+*?@ End Simplis Encryption
+*
+*?@ Start Simplis Encryption LIB_PWM
+*
+* uc1844/uc1845 has a startup current of typical 0.5 mA.
+*   To model the extra 0.2 mA compared to that
+*   of uc1844a/uc1845a, the following resistor is added.
+R_I_STARTUP2  7  5  80K
+*?@ End Simplis Encryption
+*
+.if {UVLO_AT_T0==1} then
+  .var IC_SUVL='OPEN'
+.else
+  .var IC_SUVL='CLOSE'
+.endif
+*
+.INIT SUVL={IC_SUVL}
+.INIT !DOSC={IC_OSC}
+.INIT !DSRFF={IC_DSRFF}
+.INIT !RDEAOUT={IC_RDEAOUT}
+.INIT !RVLIMIT={IC_RVLIMIT}
+.INIT !RILIMIT={IC_RILIMIT}
+.INIT !DTFF={IC_DTFF}
+*
+.ENDS UC3845
+
+
+.SUBCKT UC1825 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 vars: UVLO_AT_T0=0
++ USE_IC=0 IC_C3=0 IC_TFF=0 IC_SRFF=0 IC_SD=0 IC_D_OSC=1 IC_D_CLK=0
++ IC_RVLOW_EA=2 IC_RVHIGH_EA=2 IC_RILIM_EA=2 IC_RINHIBIT_SS=1
+*#LABELS ,UnderVoltage Locked-Out at t=0:BOOL
+*#ICDEFS,ENABLE:USE_IC,!D_UVLO:UVLO_AT_T0,C3_PWM:IC_C3,!D_TFF_PWM:IC_TFF,!D_SRFF_PWM:IC_SRFF,!D_SD:IC_SD,!D_OSC:IC_D_OSC,!D_CLK:IC_D_CLK,!RVLOW_EA:IC_RVLOW_EA,!RVHIGH_EA:IC_RVHIGH_EA,!RILIM_EA:IC_RILIM_EA,!RINHIBIT_SS:IC_RINHIBIT_SS
+*
+.NODE_MAP INV 1
+.NODE_MAP NI 2
+.NODE_MAP COMP 3
+.NODE_MAP CLK 4
+.NODE_MAP RT 5
+.NODE_MAP CT 6
+.NODE_MAP RAMP 7
+.NODE_MAP SS 8
+.NODE_MAP ILIM_SD 9
+.NODE_MAP GND 10
+.NODE_MAP OUT_A 11
+.NODE_MAP PGND 12
+.NODE_MAP VC 13
+.NODE_MAP OUT_B 14
+.NODE_MAP VCC 15
+.NODE_MAP VREF 16
+*
+* Complete simplis model for uc1825
+*
+*	PIN NO.	DESCRIPTION
+*	1	Inverting input of Error Amp
+*	2	Noninverting input of Error Amp
+*	3	Compensation/Output for Error Amp
+*	4	Clock Sync
+*	5	RT For Timing Resistor
+*	6	CT For Timing Capacitor
+*	7	Ramp Input for Pulse-Width Modulator
+*	8	Soft Start
+*	9	Shut Down
+*	10	Ground
+*	11	Output A
+*	12	Power Ground
+*	13	Power VCC
+*	14	Output B
+*	15	VCC
+*	16	VREF
+*
+; Start Under Voltage Lockout
+*
+E1_UVLO  1501  10  V_UNITY  8.8
+!D_UVLO  1502  10  15  1501  MDUVLOM  IC= 0
+.MODEL  MDUVLOM  COMP  RIN= 100MEG  ROUT= 10  HYSTWD= 0.8
++	VOL= 0  VOH= 5.00
+R_STANDBY  15  10  8K
+V_UNITY  1503  10  DC  1.0
+*
+; End Under Voltage Lockout
+; Start Reference Voltage
+*
+SUVLO  15  1601  1502  10  MSUVLOM  IC=OPEN
+.MODEL  MSUVLOM  VCSW  RON= 10M  ROFF= 100MEG  LOGIC= POS
++	TH= 2.5  HYSTWD= 1
+G1_VREF       10  1602  1601  10  1.0
+!RZEN_VREF  1602    10  MRZEN_VREFM  IC=3
+.MODEL  MRZEN_VREFM  VPWLR  NSEG= 3
++	X0= -0.702	Y0= -20.75
++	X1= -0.700	Y1=  -0.75
++	X2=  5.60	Y2=   6.00
++	X3=  5.602	Y3=  26.00
+E2_VREF   1603    10  !RZEN_VREF  1.0
+R3_VREF   1601  1603  100K
+E4_VREF   1601  1604  R3_VREF  1.0
+!RD_VREF  1604    16  MRD_VREFM  IC=2
+.MODEL  MRD_VREFM  VPWLR  NSEG= 3
++	X0= 0.00	Y0= 0.00
++	X1= 0.50	Y1= 50N
++	X2= 0.5278	Y2= 27.8M
++	X3= 100.5278	Y3= 27.81M
+F5_VREF  1604  16  !RD_VREF  0.8
+R6_VREF    16  10  2K
+*
+; End Reference Voltage
+; Start Output Inhibit
+*
+E1_GOOD_VREF  1612  10  16  10  0.625
+E2_GOOD_VREF  1612  1611  V_UNITY  1M
+!D_OUTPUT_INHIBIT  1613  10  1502  1612  MDNAND_OUT_INHIBITM  IC=1
+.MODEL MDNAND_OUT_INHIBITM  NAND2  RIN= 100MEG  ROUT= 10
++	TH= 2.5  HYSTWD= 2M  VOL= 0  VOH= 5  LOGIC= POS
+*
+;  End Output Inhibit
+; Start Oscillator and Clock
+*
+; RT
+*
+E1_RT  501  10  1502  10  1.02
+!RD_RT  501  5  MRD_RTM   IC= 1
+.MODEL  MRD_RTM  VPWLR  NSEG= 2
++	X0= 0.00	Y0= 0.00
++	X1= 2.0995	Y1= 10N
++	X2= 3.0995	Y2= 10.0
+*
+; CT
+*
+F1_OSC    10  601  !RD_RT    1K
+!RR_OSC  601   10  MRR_OSCM  IC= 1
+.MODEL  MRR_OSCM  VPWLR  NSEG= 2
++	X0= 0.00	Y0= 0.00
++	X1= 1.00	Y1= 1.00
++	X2= 2.60	Y2= 3.00
+GG_OSC   10   6  !RR_OSC  1M
+E2_OSC  602  10  V_UNITY  1.9
+!D_OSC  603  10  6  602  MD_OSCM  IC= 0
+.MODEL MD_OSCM COMP RIN= 1000MEG ROUT= 10 HYSTWD= 1.8 VOL= 0 VOH= 5
+G3_OSC   6  10  603  10  3.6M
+*
+C4_OSC   6  10  100P
+S_OSC    6  10  1502  10  MS_OSCM   IC=OPEN
+.MODEL  MS_OSCM  VCSW  RON=1K ROFF=100MEG LOGIC=NEG TH=2.5 HYSTWD=1.0
+F5_OSC  16  10  !RD_RT  1.0
+*
+; CLOCK
+*
+E1_CLK  401  10  16  10  0.56
+E2_CLK  402  401  603  10  0.42
+!R_Q3_CLK  402  4  MR_Q3_CLKM  IC= 2
+.MODEL  MR_Q3_CLKM  VPWLR  NSEG= 3
++	X0= 0.00	Y0= 0.00
++	X1= 0.50	Y1= 20N
++	X2= 0.60	Y2= 1.0M
++	X3= 25.60	Y3= 1.001M
+!R_Q4_CLK  4  10  MR_Q4_CLKM  IC= 3
+.MODEL  MR_Q4_CLKM  VPWLR  NSEG= 3
++	X0= -25.01	Y0= -41U
++	X1= -10M	Y1= -40U
++	X2=  100M	Y2=  400U
++	X3=  25.10	Y3=  401U
+E5_CLK  403  10  V_UNITY  3.40
+!D_CLK  404  10  4  403  MD_CLKM  IC= 0
+.MODEL MD_CLKM COMP RIN= 100MEG ROUT= 10 HYSTWD= 0.6 VOL= 0 VOH= 5
+*
+; End Oscillator and Clock
+; Start Error Amplifier
+*
+EINT_EA      1621  10  16  10  1
+RDM_EA        101    1  100MEG
+EPSRR_EA      101    2  15  10  5U
+GDM_EA         10  111  RDM_EA  5.6234K
+GCM_EA         10  111  2  1    0.1
+ROUT_EA       111   10  10
+RO1_EA        111    3  190
+!RVLOW_EA     121    3  MRVLOW_EAM   IC= 2
+VVLOW_EA      121   10  DC  1.0
+!RVHIGH_EA      3  131  MRVHIGH_EAM  IC= 2
+VVHIGH_EA    1621  131  DC  0.9
+HILIM_EA      141   10  RO1_EA  1K
+!RILIM_EA     141   10  MRILIM_EAM  IC= 2
+FILIM_EA      111   10  !RILIM_EA   1
+RO2_EA       1621    3  100MEG
+RO3_EA          3   10  100MEG
+*
+.MODEL  MRVLOW_EAM  VPWLR  NSEG= 3
++	X0= 0.00	Y0= 0.00
++	X1= 0.50	Y1= 10.0N
++	X2= 0.510	Y2= 5.00M
++	X3= 2.510	Y3= 5.01M
+*
+.MODEL  MRVHIGH_EAM  VPWLR  NSEG= 3
++	X0= 0.00	Y0= 0.00
++	X1= 0.50	Y1= 10.0N
++	X2= 0.510	Y2= 5.00M
++	X3= 2.510	Y3= 5.01M
+*
+.MODEL  MRILIM_EAM  VPWLR  NSEG= 3
++	X0= -3.50	Y0= -1MEG
++	X1= -2.50	Y1=  0.00
++	X2=  1.30	Y2=  0.00
++	X3=  2.30	Y3=  1MEG
+*
+; End Error Amplifier
+; Start PWM Comparator and Drive Logic
+*
+E1_PWM  701  7  V_UNITY  1.25
+!D_PWM_PWM  702  10  701  3  MD_PWM_PWMM  IC= 0
+.MODEL MD_PWM_PWMM COMP RIN= 100MEG ROUT= 10 HYSTWD= 2U VOL= 0 VOH= 5
+G_ILM_PWM    10  703  902   10  1M
+G_PWM_PWM    10  703  702   10  1M
+R3_PWM       10  703  1K
+C3_PWM	     703 10 0.1P
+G_SET_DOM    10  704  703   10  -20M
+G_CLK_PWM    10  704  404   10  1M
+R4_PWM       10  704  1K
+!D_SRFF_PWM  705  706   10  703  704  MSRFF_PWMM  IC= 0
+.MODEL MSRFF_PWMM  SRFF  RIN= 100MEG  ROUT= 10  LOGIC= POS
++	TH= 2.5  HYSTWD= 1.0  VOL= 0  VOH= 5
+G_CLK_OR    10  707  404  10  1M
+G_SRFF_OR   10  707  705  10  1M
+R7_PWM      10  707  1K
+!D_TFF_PWM  708  709   10  16  707  MTFF_PWMM  IC= 0
+.MODEL MTFF_PWMM  CLK_TFF  RIN= 100MEG  ROUT= 10  LOGIC= POS
++	TH= 2.5  HYSTWD= 1.0  VOL= 0  VOH= 5  TRIG_COND= 0_TO_1
+E_TFF_A_PWM        711  707   708  10   1.0
+E_TFF_B_PWM        714  707   709  10   1.0
+E_INHIBIT_SRC_A    751  711  1613  10   1.0
+E_INHIBIT_SINK_A   752  711  1613  10  -100.0
+E_INHIBIT_SRC_B    761  714  1613  10   1.0
+E_INHIBIT_SINK_B   762  714  1613  10  -100.0
+*
+; End PWM Comparator and Drive Logic
+; Start Output Drivers
+*
+VOUT_SRC_A     13  1351   DC  1.3
+SOUT_SRC_A   1351    11  751  10  MSOUT_SRCM   IC= OPEN
+SOUT_SINK_A    11  1251  752  10  MSOUT_SINKM  IC= OPEN
+VOUT_SINK_A  1251    12   DC  0.25
+*
+VOUT_SRC_B     13  1361   DC  1.3
+SOUT_SRC_B   1361    14  761  10  MSOUT_SRCM   IC= OPEN
+SOUT_SINK_B    14  1261  762  10  MSOUT_SINKM  IC= OPEN
+VOUT_SINK_B  1261    12   DC  0.25
+*
+.MODEL  MSOUT_SRCM   VCSW  RON= 0.800  ROFF= 300K  LOGIC= NEG
++	TH= 2.5  HYSTWD= 1.0
+.MODEL  MSOUT_SINKM  VCSW  RON= 1.833  ROFF= 300K  LOGIC= POS
++	TH= 2.5  HYSTWD= 1.0
+*
+; End Output Drivers
+; Start Current Limit and ShutDown
+*
+E1_ILM  901  10  V_UNITY  1.0
+!D_ILM  902  10  9  901  MD_PWM_PWMM  IC= 0
+E1_SD   903  10  V_UNITY  1.4
+!D_SD   904  10  9  903  MD_PWM_PWMM  IC= 0
+*
+; End Current Limit and ShutDown
+; Start Soft Start
+*
+EVREF_SS   801   10  16  10  1
+!RI9U_SS   801    8  MRI9U_SSM  IC=3
+E3_SS      802  904  1613  10  1
+E4_SS      803   10  V_UNITY  2.5
+!D5_SS     804   10  802  803  MD5_SSM  IC=0
+Q6_SS        8   10  804  10  MQ6_SSM  IC=OPEN
+E11_SS     807   10  V_UNITY  -116M
+E12_SS     808  807  8  10  1
+!RINHIBIT_SS  3  808  MRSAT_SSM  IC= 1
+*
+.MODEL  MRI9U_SSM  VPWLR  NSEG= 3
++	X0= -1.10M	Y0= -90.101N
++	X1= -100U	Y1= -90.1N
++	X2=  0.01	Y2=  9.01U
++	X3=  10.01	Y3=  9.02U
+*
+.MODEL  MD5_SSM  COMP  RIN= 100MEG  ROUT= 10  HYSTWD= 0.2
++	VOL= 0.0  VOH= 5.00
+*
+.MODEL  MQ6_SSM  VCQPOS  RSAT= 10  ROFF= 500MEG  VSAT= 0.1
++	TH= 2.499  HYSTWD= 2M  LOGIC= POS  GAIN= 420U  LEVEL= 2
+*
+.MODEL  MRSAT_SSM  VPWLR  NSEG= 3
++	X0= 0.00	Y0= 0.00
++	X1= 0.10	Y1= 10N
++	X2= 0.15	Y2= 4M
++	X3= 10.15	Y3= 4.01M
+*
+; End Soft Start
+*
+.if {UVLO_AT_T0==1} then
+  .var IC_D_UVLO=0
+  .var IC_D_OUTPUT_INHIBIT=1
+  .var IC_SUVLO='OPEN'
+.else
+  .var IC_D_UVLO=1
+  .var IC_D_OUTPUT_INHIBIT=0
+  .var IC_SUVLO='CLOSE'
+.endif
+*
+.if {USE_IC==1} then
+    .INIT V(C3_PWM)={IC_C3}
+.endif
+.INIT !D_UVLO={IC_D_UVLO}
+.INIT !D_OUTPUT_INHIBIT={IC_D_OUTPUT_INHIBIT}
+.INIT SUVLO={IC_SUVLO}
+.INIT !D_TFF_PWM={IC_TFF}
+.INIT !D_SRFF_PWM={IC_SRFF}
+.INIT !D_SD={IC_SD}
+.INIT !D_OSC={IC_D_OSC}
+.INIT !D_CLK={IC_D_CLK}
+.INIT !RVLOW_EA={IC_RVLOW_EA}
+.INIT !RVHIGH_EA={IC_RVHIGH_EA}
+.INIT !RILIM_EA={IC_RILIM_EA}
+.INIT !RINHIBIT_SS={IC_RINHIBIT_SS}
+*
+.ENDS UC1825
+
+
+.SUBCKT UC1846 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 vars: UVLO_AT_T0=0
++ USE_IC=0 IC_C2=0 IC_DUVCOMP=0 IC_SQ2='OPEN' IC_DSRFF=1 IC_DTFF=0
++ IC_DCOMP1_OSC=0 IC_DCOMP2_OSC=0 IC_DSDCOMP=0 IC_DFLCOMP=0
++ IC_SV_SCR='OPEN' IC_SI_SCR='OPEN' IC_RVL_EA=2 IC_RIL_EA=2
++ IC_RSCR=1 IC_RE_Q1=1
+*#LABELS ,UnderVoltage Locked-Out at t=0:BOOL
+*#ICDEFS,ENABLE:USE_IC,C2_PWM:IC_C2,!DUVCOMP:UVLO_AT_T0,!DSRFF:IC_DSRFF,!DTFF:IC_DTFF,!DCOMP1_OSC:IC_DCOMP1_OSC,!DCOMP2_OSC:IC_DCOMP2_OSC,!DSDCOMP:IC_DSDCOMP,!DFLCOMP:IC_DFLCOMP,SV_SCR:IC_SV_SCR,SI_SCR:IC_SI_SCR,!RVL_EA:IC_RVL_EA,!RIL_EA:IC_RIL_EA,!RSCR:IC_RSCR,!RE_Q1:IC_RE_Q1
+*
+.NODE_MAP ILIM_ADJ 1
+.NODE_MAP VREF 2
+.NODE_MAP ISNS_N 3
+.NODE_MAP ISNS_P 4
+.NODE_MAP NI 5
+.NODE_MAP INV 6
+.NODE_MAP COMP 7
+.NODE_MAP CT 8
+.NODE_MAP RT 9
+.NODE_MAP SYNC 10
+.NODE_MAP OUT_A 11
+.NODE_MAP GND 12
+.NODE_MAP VC 13
+.NODE_MAP OUT_B 14
+.NODE_MAP VIN 15
+.NODE_MAP SD 16
+*
+* Complete simplis model for UC1846
+*
+*       PIN NO. DESCRIPTION
+*       1       Current Limit Adjust
+*       2       VREF
+*       3       Current Sense-
+*       4       Current Sense+
+*       5       Noninverting input of Error Amp
+*       6       Inverting input of Error Amp
+*       7       Compensation/Output for Error Amp
+*       8       CT For Timing Capacitor
+*       9       RT For Timing Resistor
+*       10      Clock Sync
+*       11      Output A
+*       12      Ground
+*       13      Power VCC
+*       14      Output B
+*       15      VIN
+*       16      Shut Down
+*
+************************************************************
+* ERROR AMPLIFIER
+************************************************************
+*
+RIN_EA 5 6 1.0MEG
+VOS_EA 201 5 DC 0.5M
+IB1_EA 201 12 DC -0.6U
+IB2_EA 6 12 DC -0.6U
+IOS_EA 201 6 DC 20N
+G1_EA 12 202 201 6 4.4457M
+!RIL_EA 202 12 MRILEA IC=2
+.MODEL MRILEA VPWLR NSEG=3
++   X0=-6.4801   Y0=-106.48U
++   X1=-6.48     Y1=-6.48U
++   X2=0.0       Y2=0.0U
++   X3=0.0001    Y3=100.0U
+G2_EA 12 203 202 12 1.0M
+!RVL_EA 203 12 MRVLEA IC=2
+.MODEL MRVLEA VPWLR NSEG=3
++   X0=0.7       Y0=-99.92999U
++   X1=0.7001    Y1=0.07001U
++   X2=4.6       Y2=0.46U
++   X3=4.6001    Y3=100.46U
+ROUT_EA 203 7 14
+*
+************************************************************
+* D1, V1, I1, Q1, SCR1, Q2
+************************************************************
+*
+* D1
+VD1 7 115 DC 0.49
+*!RD1 7 115 MRDIODE2 IC=1
+.MODEL MRDIODE2 VPWLR NSEG=2
++   X0=-5.0        Y0=-100U
++   X1=0.5         Y1=10.0U
++   X2=0.5001      Y2=110U
+.MODEL MRDIODE VPWLR NSEG=2
++   X0=-7.0       Y0=-10.0U
++   X1=0.7         Y1=1.0U
++   X2=0.8         Y2=0.1
+* V1
+V1 115 114 DC 0.5
+* I1
+G1 2 7 2 12 0.0975M
+* Q1
+*	;	VDQ1 7 799 DC -0.24
+*	;	Q1 12 799 1 799 MQPNP IC=CLOSE
+*	;	.MODEL MQPNP VCQNEG VSAT=-0.1 RSAT=1.0 ROFF=500K
+*	;	+ GAIN=25M TH=-.7 HYSTWD=1F LOGIC=NEG LEVEL=2
+!RE_Q1 7 1 MRDIODE IC=1
+*FE_Q1 1 7 !RC_Q1 0.7
+*!RC_Q1 12 1 MRDIODE IC=1
+FC_Q1 1 12 !RE_Q1 0.99
+RR1 1 12 1MEG
+R1 2 1 100K
+* SCR1
+!RSCR 1 301 MRDIODE IC=1
+SI_SCR 301 12 !RSCR MSISCR IC=OPEN
+.MODEL MSISCR ICSW RON=.01 ROFF=1G TH=1.543M HYSTWD=1.0M LOGIC=POS
+SV_SCR 301 12 112 12 MSVSCR IC=OPEN
+.MODEL MSVSCR VCSW RON=.01 ROFF=1G TH=1.5 HYSTWD=1.0M LOGIC=POS
+* Q2
+SQ2 1 12 101 12 MSQ2 IC=OPEN
+.MODEL MSQ2 VCSW RON=100 ROFF=1G TH=1.0 HYSTWD=1M LOGIC=POS
+*
+************************************************************
+* CURRENT SENSE AMPLIFIER
+************************************************************
+*
+RIN_CA 4 3 1.0MEG
+VOS_CA 401 4 DC 5.0M
+IB1_CA 401 12 DC -2.5U
+IB2_CA 3 12 DC -2.5U
+IOS_CA 401 3 DC 20N
+E1_CA 113 12 401 3 3.00
+*G1_CA 12 402 401 3 275.0U
+*!RVL_CA 402 12 MRVLCA IC=2
+.MODEL MRVLCA VPWLR NSEG=3
++   X0=-0.0001   Y0=-100.0U
++   X1=0.0001    Y1=100.0U
++   X2=5.0       Y2=599.99U
++   X3=5.0001    Y3=699.99U
+*ROUT_CA 402 113 100
+*
+***********************************************************
+* VOLTAGE REFERENCE
+***********************************************************
+*
+R1_REF 15 901 17.6K
+!RZ_REF 12 901 MRZREF IC=2
+.MODEL MRZREF VPWLR NSEG=3
++   X0=-5.79     Y0=-5.864726M
++   X1=-5.78     Y1=-5.48U
++   X2=0.7       Y2=1.0U
++   X3=0.700001  Y3=1.00001
+!RC_REF 901 15 MRDIODE IC=1
+!RE_REF 901 2 MREFDIODE IC=1
+.MODEL MREFDIODE VPWLR NSEG=2
++   X0=-7.0         Y0=-10.0U
++   X1=0.7          Y1=1.0U
++   X2=0.8          Y2=117.57M
+FC_REF 15 901 !RE_REF 0.993
+FE_REF 2 901 !RC_REF 0.7
+*
+***********************************************************
+* OSCILLATOR
+***********************************************************
+*
+!R_ISNS_OSC 2 9 MRISNS_OSC IC=1
+.MODEL MRISNS_OSC VPWLR NSEG=2
++  X0=0  Y0=0  X1=1.5  Y1=75N  X2=1.6  Y2=2M
+R0_OSC 9 12 100MEG
+FCHRG_OSC 2 8 !R_ISNS_OSC 1.0
+S_OSC     8 12 101 12  MS_OSCM  IC=OPEN
+.MODEL  MS_OSCM  VCSW  RON=1K ROFF=100MEG LOGIC=POS TH=2.5 HYSTWD=1.0
+GDISCHRG_OSC 8 12 109 12 2.4M
+R1_OSC 2 5011 3.0K
+R2_OSC 5011 12 2.0K
+V2_OSC 501 12 2.04
+!DCOMP1_OSC 502 12 8 501 MCOMPSAW IC=0
+.MODEL MCOMPSAW COMP HYSTWD=1.74 VOL=3 VOH=4.35 RIN=10MEG ROUT=50
+!DCOMP2_OSC 109 12 10 503 MCOMP10M IC=0
+.MODEL MCOMP10M COMP HYSTWD=2U VOL=0 VOH=5 RIN=10MEG ROUT=50
+VCOMP2_OSC 503 12 DC 3.675
+.MODEL MSVOSC VCSW RON=.01 ROFF=1G TH=.5 HYSTWD=1U LOGIC=POS
+R3_OSC 10 502 4.0K
+*
+***********************************************************
+* FEEDBACK/CURRENT LIMIT COMPARATOR
+* SHUTDOWN COMPARATOR
+* UNDERVOLTAGE LOCKOUT COMPARATOR
+***********************************************************
+*
+* F/L COMPARATOR
+!DFLCOMP 111 12 113 114 MCOMPFL IC=0
+.MODEL MCOMPFL COMP HYSTWD=1F VOL=0 VOH=5 RIN=1T ROUT=50
+* SD COMPARATOR
+!DSDCOMP 112 12 16 601 MCOMP10M IC=0
+VSDCOMP 601 12 DC .35
+RSDCOMP 16 12 6K
+* UV COMPARATOR
+!DUVCOMP 101 12 602 15 MUVCOMP IC=0
+.MODEL MUVCOMP COMP HYSTWD=.75 VOL=0 VOH=5 RIN=10MEG ROUT=50
+VUVCOMP 602 12 DC 7.7
+*
+***********************************************************
+* OUTPUT TRANSISTORS
+***********************************************************
+*
+QOUT_A_TOP 13 11 104 12 MQOUT_TOPM IC=OPEN
+QOUT_A_BOT 11 12 104 12 MQOUT_BOTM IC=CLOSE
+*
+QOUT_B_TOP 13 14 108 12 MQOUT_TOPM IC=OPEN
+QOUT_B_BOT 14 12 108 12 MQOUT_BOTM IC=CLOSE
+*
+.MODEL MQOUT_TOPM VCQPOS VSAT=.025 RSAT=3.75 ROFF=500K GAIN=100
++ TH=0.7 HYSTWD=2U LOGIC=NEG LEVEL=1
+.MODEL MQOUT_BOTM VCQPOS VSAT=.025 RSAT=3.75 ROFF=500K GAIN=100
++ TH=0.7 HYSTWD=2U LOGIC=POS LEVEL=1
+*
+***********************************************************
+* LOGIC
+* OR/NORA, OR/NORB, PWM LATCH, TOGGLE FLIP-FLOP
+***********************************************************
+*
+* OR/NORA, OR/NORB
+!DORA 104 12 101 102 105 MOR3M IC=1
+.MODEL MOR3M OR3 TH=2.5 HYSTWD=2U VOL=0 VOH=5 RIN=10MEG
++ ROUT=50 LOGIC=POS
+!DORB 108 12 101 105 106 MOR3M IC=1
+* PWM LATCH
+EDOR1_PWM 701 111 112 12 1
+.MODEL MOR2M OR2 TH=2.5 HYSTWD=2U VOL=0 VOH=5 RIN=10MEG
++ ROUT=50 LOGIC=POS
+!DOR2_PWM 105 12 110 109 MOR2M IC=1
+C2_PWM 105 12 5P
+!DSRFF 110 702 12 701 109 MSRFFM IC=1
+.MODEL MSRFFM SRFF TH=2.5 HYSTWD=2U VOL=0 VOH=5 RIN=10MEG
++ ROUT=50 LOGIC=POS
+!DTFF 102 106 12 2 105 MTFFM IC=0
+.MODEL MTFFM  CLK_TFF  RIN=100MEG  ROUT=10  LOGIC=POS
++	TH=2.5  HYSTWD=1.0  VOL=0  VOH=5  TRIG_COND=0_TO_1
+*
+.if {UVLO_AT_T0==1} then
+  .var IC_DUVCOMP=1
+  .var IC_SQ2='CLOSE'
+.else
+  .var IC_DUVCOMP=0
+  .var IC_SQ2='OPEN'
+.endif
+*
+.if {USE_IC==1} then
+    .INIT V(C2_PWM)={IC_C2}
+.endif
+.INIT !DUVCOMP={IC_DUVCOMP}
+.INIT SQ2={IC_SQ2}
+.INIT !DCOMP1_OSC={IC_DCOMP1_OSC}
+.INIT !DCOMP2_OSC={IC_DCOMP2_OSC}
+.INIT !DSDCOMP={IC_DSDCOMP}
+.INIT !DFLCOMP={IC_DFLCOMP}
+.INIT SV_SCR={IC_SV_SCR}
+.INIT SI_SCR={IC_SI_SCR}
+.INIT !RVL_EA={IC_RVL_EA}
+.INIT !RIL_EA={IC_RIL_EA}
+.INIT !DSRFF={IC_DSRFF}
+.INIT !DTFF={IC_DTFF}
+.INIT !RSCR={IC_RSCR}
+.INIT !RE_Q1={IC_RE_Q1}
+*
+.ENDS UC1846
+
+
+
+.SUBCKT TL431 2 3 1 vars:
++ USE_IC=0 IC_CP1=0 IC_CP2=0 IC_RD1=1 IC_RD2=1 IC_RDC=2 IC_RDR=1
+**#LABELS ,
+*#ICDEFS,ENABLE:USE_IC,CP1:IC_CP1,CP2:IC_CP2,!RD1:IC_RD1,!RD2:IC_RD2,!RDC:IC_RDC,!RDR:IC_RDR
+**
+*START_PIN_NAMES
+.NODE_MAP ANODE		2
+.NODE_MAP CATHODE	3
+.NODE_MAP REFIN		1
+*START_PIN_NAMES
+*
+*Reference Input Stage
+* !RD1, F1, !RD2, and F2 form Ebers-Moll model of an NPN with
+*	(C/B/E) = (3/1/10)
+!RD1 1 10 MD1M IC=1
+F2 10 1 !RD2 0.5
+!RD2 1 3 MD1M IC=1
+F1 3 1 !RD1 0.5
+RIN 10 2 500K
+*Internal Reference Voltage
+IVR 2 20 DC 1.00
+RVR 20 2 1.8841
+*Pole/Zero Modeling
+GM 2 30 10 20 1.1534332086985
+RGM 30 2 1000K
+* Poles/Zeros -	Pole 1 = RGM & CP1, 10KHZ
+*		Pole 2 = RP2 & CP2, 60KHZ
+*		Zero 3 = CP1 & RZ1, 500KHZ
+CP1 30 40 15.92p 
+RZ1 40 2 20K
+RP2 30 50 10MEG
+CP2 50 2 0.265p 
+*Gain Stage Voltage Clamp
+!RDC 2 30 MDCLAMPM IC=2
+*Output Stage
+GO 3 2 50 2 3.0581818181818u
+!RDR 2 3 MDNOM IC=1
+* Models
+.MODEL MDNOM VPWLR NSEG=2
++	X0= 0	Y0= 0
++	X1= 0.5	Y1= 1U
++	X2= 0.6 Y2= 0.100001
+.MODEL MDCLAMPM VPWLR NSEG=2
++	X0= -10	Y0= -1U
++	X1= 0	Y1= 0
++	X2= 1U	Y2= 1
+.MODEL MD1M VPWLR NSEG=2
++	X0= 0		Y0= 0
++	X1= 0.614	Y1= 0.1N
++	X2= 0.714	Y2= 0.01
+*
+.if {USE_IC==1} then
+    .INIT V(CP1)={IC_CP1}
+    .INIT V(CP2)={IC_CP2}
+.endif
+*
+.INIT !RD1={IC_RD1}
+.INIT !RD2={IC_RD2}
+.INIT !RDC={IC_RDC}
+.INIT !RDR={IC_RDR}
+*
+.ENDS TL431
+
+
+
+.SUBCKT TLV431 2 3 1 vars:
++ USE_IC=0 IC_CP1=0 IC_CP2=0 IC_RD1=1 IC_RD2=1 IC_RDC=2 IC_RDR=1
+**#LABELS ,
+*#ICDEFS,ENABLE:USE_IC,CP1:IC_CP1,CP2:IC_CP2,!RD1:IC_RD1,!RD2:IC_RD2,!RDC:IC_RDC,!RDR:IC_RDR
+**
+*START_PIN_NAMES
+.NODE_MAP ANODE		2
+.NODE_MAP CATHODE	3
+.NODE_MAP REFIN		1
+*START_PIN_NAMES
+*
+*Reference Input Stage
+* !RD1, F1, !RD2, and F2 form Ebers-Moll model of an NPN with
+*	(C/B/E) = (3/1/10)
+!RD1 1 10 MD1M IC=1
+F2 10 1 !RD2 0.9
+!RD2 1 3 MD1M IC=1
+F1 3 1 !RD1 0.9
+RIN 10 2 600K
+*Internal Reference Voltage
+IVR 2 20 DC 1.00
+RVR 20 2 0.6241
+*Pole/Zero Modeling
+GM 2 30 10 20 1.1534332086985
+RGM 30 2 1000K
+* Poles/Zeros -	Pole 1 = RGM & CP1, 10KHZ
+*		Pole 2 = RP2 & CP2, 60KHZ
+*		Zero 3 = CP1 & RZ1, 500KHZ
+CP1 30 40 15.92p 
+RZ1 40 2 20K
+RP2 30 50 10MEG
+CP2 50 2 0.265p 
+*Gain Stage Voltage Clamp
+!RDC 2 30 MDCLAMPM IC=2
+*Output Stage
+GO 3 2 50 2 3.0581818181818u
+!RDR 2 3 MDNOM IC=1
+* Models
+.MODEL MDNOM VPWLR NSEG=2
++	X0= 0	Y0= 0
++	X1= 0.5	Y1= 1U
++	X2= 0.6 Y2= 0.100001
+.MODEL MDCLAMPM VPWLR NSEG=2
++	X0= -10	Y0= -1U
++	X1= 0	Y1= 0
++	X2= 1U	Y2= 1
+.MODEL MD1M VPWLR NSEG=2
++	X0= 0		Y0= 0
++	X1= 0.614	Y1= 0.1N
++	X2= 0.714	Y2= 0.01
+*
+.if {USE_IC==1} then
+.INIT V(CP1)={IC_CP1}
+.INIT V(CP2)={IC_CP2}
+.endif
+*
+.INIT !RD1={IC_RD1}
+.INIT !RD2={IC_RD2}
+.INIT !RDC={IC_RDC}
+.INIT !RDR={IC_RDR}
+*
+.ENDS TLV431

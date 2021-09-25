@@ -1,0 +1,49 @@
+Trasiente y barrido de parámetros
+Date: vie. ago. 27 17:10:22 2021
+
+
+*TRAN sweep r1[resistance] run 1 of 11 (p1)
+
+r1[resistance]  100        ->  40
+
+*TRAN sweep r1[resistance] run 2 of 11 (p2)
+
+r1[resistance]  100        ->  140
+
+*TRAN sweep r1[resistance] run 3 of 11 (p3)
+
+r1[resistance]  100        ->  240
+
+*TRAN sweep r1[resistance] run 4 of 11 (p4)
+
+r1[resistance]  100        ->  340
+
+*TRAN sweep r1[resistance] run 5 of 11 (p5)
+
+r1[resistance]  100        ->  440
+
+*TRAN sweep r1[resistance] run 6 of 11 (p6)
+
+r1[resistance]  100        ->  540
+
+*TRAN sweep r1[resistance] run 7 of 11 (p7)
+
+r1[resistance]  100        ->  640
+
+*TRAN sweep r1[resistance] run 8 of 11 (p8)
+
+r1[resistance]  100        ->  740
+
+*TRAN sweep r1[resistance] run 9 of 11 (p9)
+
+r1[resistance]  100        ->  840
+
+*TRAN sweep r1[resistance] run 10 of 11 (p10)
+
+r1[resistance]  100        ->  940
+
+*TRAN sweep r1[resistance] run 11 of 11 (p11)
+
+r1[resistance]  100        ->  1k
+
+

@@ -1,0 +1,9 @@
+*Ideal 5-winding Transformer Subcircuit
+
+.SUBCKT IDEAL5W 1 2 3 4 5 6 7 8 9 10 PARAMS: RATIO1=1 RATIO2=1 RATIO3=1 RATIO4=1
+BP  1  2 I=( -I(BS1)*{RATIO1} - I(BS2)*{RATIO2} - I(BS3)*{RATIO3} - I(BS4)*{RATIO4} )
+BS1 3  4 V=( V(1,2)*{RATIO1} )
+BS2 5  6 V=( V(1,2)*{RATIO2} )
+BS3 7  8 V=( V(1,2)*{RATIO3} )
+BS4 9 10 V=( V(1,2)*{RATIO3} )
+.ENDS IDEAL5W

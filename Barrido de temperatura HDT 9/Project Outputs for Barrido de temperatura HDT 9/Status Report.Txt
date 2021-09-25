@@ -1,0 +1,10 @@
+Output: Mixed Sim
+Type  : AdvSimNetlist
+From  : Project [Barrido de temperatura HDT 9.PrjPcb]
+   Generated File[Barrido de temperatura HDT 9.nsx]
+
+
+Files Generated   : 1
+Documents Printed : 0
+
+Finished Output Generation At 11:09:52 On 2/9/2021

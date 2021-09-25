@@ -1,0 +1,30 @@
+*Simplified Transformer Subcircuit Parameters
+*L1     = primary inductance
+*RATIO1 = turns ratio (= secondary1/primary)
+*RATIO2 = turns ratio (= secondary2/primary)
+*RATIO3 = turns ratio (= secondary3/primary)
+*RATIO4 = turns ratio (= secondary4/primary)
+*
+*Connections:
+*                    Pri+
+*                    | Pri-
+*                    | | Sec1+
+*                    | | | Sec1-
+*                    | | | | Sec2+
+*                    | | | | | Sec2-
+*                    | | | | | | Sec3+
+*                    | | | | | | | Sec3-
+*                    | | | | | | | | Sec4+
+*                    | | | | | | | | | Sec5-
+*                    | | | | | | | | | |
+.SUBCKT SIMPL5WTRANS 1 2 3 4 5 6 7 8 9 10 PARAMS: L1=1m RATIO1=1 RATIO2=1 RATIO3=1 RATIO4=1
+Lx 1 2 {L1}
+Xx 1 2 3 4 5 6 7 8 9 10 IDEAL5W PARAMS: RATIO1={RATIO1} RATIO2={RATIO2} RATIO3={RATIO3} RATIO4={RATIO4}
+.SUBCKT IDEAL5W 1 2 3 4 5 6 7 8 9 10 PARAMS: RATIO1=1 RATIO2=1 RATIO3=1 RATIO4=1
+BP  1  2 I=( -I(BS1)*{RATIO1} - I(BS2)*{RATIO2} - I(BS3)*{RATIO3} - I(BS4)*{RATIO4} )
+BS1 3  4 V=( V(1,2)*{RATIO1} )
+BS2 5  6 V=( V(1,2)*{RATIO2} )
+BS3 7  8 V=( V(1,2)*{RATIO3} )
+BS4 9 10 V=( V(1,2)*{RATIO4} )
+.ENDS IDEAL5W
+.ENDS SIMPL5WTRANS

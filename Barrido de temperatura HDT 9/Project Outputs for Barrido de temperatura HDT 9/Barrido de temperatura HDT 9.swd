@@ -1,0 +1,89 @@
+Barrido de temperatura HDT 9
+Date: jue. sep. 2 11:09:53 2021
+
+
+*AC sweep option[temp] run 1 of 21 (t1)
+
+option[temp]  27         -> - 50
+
+*AC sweep option[temp] run 2 of 21 (t2)
+
+option[temp]  27         -> - 40
+
+*AC sweep option[temp] run 3 of 21 (t3)
+
+option[temp]  27         -> - 30
+
+*AC sweep option[temp] run 4 of 21 (t4)
+
+option[temp]  27         -> - 20
+
+*AC sweep option[temp] run 5 of 21 (t5)
+
+option[temp]  27         -> - 10
+
+*AC sweep option[temp] run 6 of 21 (t6)
+
+option[temp]  27         ->  0
+
+*AC sweep option[temp] run 7 of 21 (t7)
+
+option[temp]  27         ->  10
+
+*AC sweep option[temp] run 8 of 21 (t8)
+
+option[temp]  27         ->  20
+
+*AC sweep option[temp] run 9 of 21 (t9)
+
+option[temp]  27         ->  30
+
+*AC sweep option[temp] run 10 of 21 (t10)
+
+option[temp]  27         ->  40
+
+*AC sweep option[temp] run 11 of 21 (t11)
+
+option[temp]  27         ->  50
+
+*AC sweep option[temp] run 12 of 21 (t12)
+
+option[temp]  27         ->  60
+
+*AC sweep option[temp] run 13 of 21 (t13)
+
+option[temp]  27         ->  70
+
+*AC sweep option[temp] run 14 of 21 (t14)
+
+option[temp]  27         ->  80
+
+*AC sweep option[temp] run 15 of 21 (t15)
+
+option[temp]  27         ->  90
+
+*AC sweep option[temp] run 16 of 21 (t16)
+
+option[temp]  27         ->  100
+
+*AC sweep option[temp] run 17 of 21 (t17)
+
+option[temp]  27         ->  110
+
+*AC sweep option[temp] run 18 of 21 (t18)
+
+option[temp]  27         ->  120
+
+*AC sweep option[temp] run 19 of 21 (t19)
+
+option[temp]  27         ->  130
+
+*AC sweep option[temp] run 20 of 21 (t20)
+
+option[temp]  27         ->  140
+
+*AC sweep option[temp] run 21 of 21 (t21)
+
+option[temp]  27         ->  150
+
+

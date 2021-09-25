@@ -1,0 +1,19 @@
+*Simplified Transformer Subcircuit Parameters
+*L1    = primary inductance
+*RATIO = turns ratio (= secondary/primary)
+*
+*Connections:
+*                  Pri+
+*                  | Pri-
+*                  | | Sec+
+*                  | | | Sec-
+*                  | | | |
+.SUBCKT SIMPLTRANS 1 2 3 4 PARAMS: L1=1m RATIO=1
+Lx 1 2 {L1}
+Xx 1 2 3 4 IDEALTRANS PARAMS: RATIO={RATIO}
+.SUBCKT IDEALTRANS 1 2 3 4 PARAMS: RATIO=1
+BP 1 2 I=( -I(BS)*{RATIO} )
+BS 3 4 V=( V(1,2)*{RATIO} )
+.ENDS IDEALTRANS
+.ENDS SIMPLTRANS
+
